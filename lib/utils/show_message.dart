@@ -1,6 +1,5 @@
-
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-
 
 Future<void> showErrorDialog(String message, context) async {
   return showDialog<void>(
@@ -55,6 +54,29 @@ Future<void> showInfoDialog(
                   },
                   child: const Text("Ok")),
             ),
+          )
+        ],
+      );
+    },
+  );
+}
+
+Future<void> showLoadingDialog(
+    {required String message, required BuildContext context}) async {
+  return showDialog<void>(
+    context: context,
+    builder: (context) {
+      return SimpleDialog(
+        title: const Text('Loading'),
+        alignment: Alignment.center,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+            child: Center(child: Text(message)),
+          ),
+          const CupertinoActivityIndicator(),
+          const Padding(
+            padding: EdgeInsets.only(right: 20.0),
           )
         ],
       );

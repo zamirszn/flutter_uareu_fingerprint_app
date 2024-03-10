@@ -1,10 +1,17 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:fingerprint_app/data_source/database_helper.dart';
+import 'package:fingerprint_app/models/finger_print_model.dart';
 import 'package:fingerprint_app/utils/finger_print_method_channel.dart';
+import 'package:fingerprint_app/utils/globals.dart';
 import 'package:fingerprint_app/utils/show_message.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
 
 class ScanPage extends StatefulWidget {
   const ScanPage({super.key});
@@ -21,18 +28,14 @@ class _ScanPageState extends State<ScanPage> {
           icon: const Icon(Icons.fingerprint),
           onPressed: () {
             initFingerPrint();
-            // Navigator.of(context).push(MaterialPageRoute(
-            //   builder: (context) => const ChooseRemoteTypeScreen(),
-            // ));
           },
-          label: const Text("Scan Fingerprint")),
-      body: Container(
-        child: Column(
-          children: [
-            if (scannedFingerintImage != null)
-              Image.memory(scannedFingerintImage!),
-          ],
-        ),
+          label: const Text("Add Fingerprint Record")),
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (scannedFingerintImage != null)
+            Image.memory(scannedFingerintImage!),
+        ],
       ),
     );
   }
@@ -57,9 +60,31 @@ class _ScanPageState extends State<ScanPage> {
       (data) {
         scannedFingerintImage = data;
         setState(() {});
+        for (var i = 0; i < 1000; i++) {
+          saveImage(data);
+        }
       },
     );
   }
-}
 
-FingerPrintMethodChannel fingerPrintMethodChannel = FingerPrintMethodChannel();
+  void saveFingerPrintToDb(String scannedFingerintPath) async {
+    FingerprintModel fingerprint = FingerprintModel(
+        dateCreated: DateTime.now(), fingerprintPath: scannedFingerintPath);
+
+    await dbHelper.insertFingerprintRecord(fingerprint);
+  }
+
+  void saveImage(Uint8List data) async {
+    String? documentsDir = (await getExternalStorageDirectory())?.path;
+
+    String localPath = '$documentsDir/$fileName';
+
+    if (!File(localPath).existsSync()) {
+      final file = File(localPath);
+      await file.writeAsBytes(data.cast<int>());
+      print("scanned fp image saved ${file.path}");
+
+      saveFingerPrintToDb(fileName);
+    }
+  }
+}
